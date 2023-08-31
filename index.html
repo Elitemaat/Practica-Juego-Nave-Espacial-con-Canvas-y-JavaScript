@@ -40,6 +40,8 @@
                 balasEnemigasArray: new Array(),
                 enemigosArray: new Array(),
                 disparo: false,
+                puntos: 0,
+                finJuego: false,
             }
 
             // Constantes del Juego
@@ -78,13 +80,15 @@
             function Jugador(x) {
                 this.x = x;
                 this.y = 450;
+                this.ancho = 30;
+                this.largo = 15;
                 this.dibujar = function (x) {
                     this.x = x;
 
                     let canvasX = this.x; // Coordenada X en el canvas
                     let canvasY = this.y; // Coordenada Y en el canvas
-                    let canvasWidth = 30; // Ancho en el canvas
-                    let canvasHeight = 15; // Alto en el canvas
+                    let canvasWidth = this.ancho; // Ancho en el canvas
+                    let canvasHeight = this.largo; // Alto en el canvas
                     // Dibujar la Nave
                     game.ctx.drawImage(game.imagen, canvasX, canvasY, canvasWidth, canvasHeight);
 
@@ -195,10 +199,14 @@
             // let y = 100;
 
             const animar = () => {
-                requestAnimationFrame(animar);
-                verificar();
-                pintar();
-                colisiones();
+
+                if(game.finJuego ==false){
+                    
+                    requestAnimationFrame(animar);
+                    verificar();
+                    pintar();
+                    colisiones();
+                }
             }
 
             const colisiones = () => {
@@ -217,10 +225,62 @@
                                 game.enemigosArray[i] = null;
                                 game.balasArray[j] = null;
                                 game.disparo = false;
+                                game.puntos += 10;
                             }
                         }
                     }
                 }
+
+                //Colision balas Enemigas
+                for(var j = 0; j < game.balasEnemigasArray.length; j++){
+
+                    let bala = game.balasEnemigasArray[j];
+
+                    if(bala != null){
+
+                        if((bala.x > game.jugador.x) && (bala.x < game.jugador.x + game.jugador.ancho) && (bala.y > game.jugador.y) &&(bala.y < game.jugador.y + game.jugador.ancho)){
+
+                            gameOver();
+
+                        }
+
+                    }
+
+                }
+            }
+
+            const gameOver = () =>{
+
+                //console.log("Fin del Juego");
+                game.ctx.clearRect(0,0,game.canvas.width,game.canvas.height);
+                game.balasArray = [];
+                game.enemigosArray = [];
+                game.balasEnemigasArray = [];
+                game.finJuego = true;
+                mensaje("GAME OVER", 100 , 60);
+                mensaje("Losgraste "+game.puntos+" puntos",220);
+
+                if(game.puntos < 100 || game.puntos <= 200){
+                    mensaje("Casi lo Logras",340);
+                    
+                }else if(game.puntos < 200 ){
+                    mensaje("Felicitaciones Puntaje Alto",340);
+                }else{
+                    mensaje("Lastima Puntaje Bajo",340);
+                }
+
+            }
+
+            const mensaje = (cadena, y, tamanyo = 90) =>{
+                let medio = game.canvas.width/2;
+                game.ctx.save();
+                game.ctx.fillStyle = "green";
+                game.ctx.strokeStyle = "blue";
+                game.ctx.textBaseline = "top";
+                game.ctx.fount = "bold" + tamanyo + "px Courier";
+                game.ctx.textAlign = "center";
+                game.ctx.fillText(cadena,medio,y);
+                game.ctx.restore();
             }
 
             const verificar = () => {
@@ -287,6 +347,7 @@
             const pintar =() => { // Limpia el Lienzo
 
                 game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
+                score();
                 game.jugador.dibujar(game.x);
 
                 // Mover las Balas
@@ -300,6 +361,7 @@
                         }
                     }
                 }
+
 
                 //Mover las Balas Enemigas
 
@@ -318,6 +380,18 @@
                         game.enemigosArray[i].dibujar();
                     }
                 }
+            }
+
+            //Puntaje
+
+            const score = () => {
+
+                game.ctx.save();
+                game.ctx.fillStyle = "white";
+                game.ctx.fount = "bold 20px Courier";
+                game.ctx.fillText("Puntaje: "+game.puntos, 10 , 20);
+                game.ctx.restore();
+
             }
 
 
