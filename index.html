@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Juego de Naves Espaciales</title>
+        <style>
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+            }
+
+            canvas {
+                margin: auto;
+                background-color: black;
+                border: 5px solid yellowgreen;
+            }
+
+            .container {
+                text-align: center;
+            }
+        </style>
+        <script>
+
+            game = {
+
+                canvas: null,
+                ctx: null,
+                imagen: null,
+                caratula: true,
+                imgenEnemigo: null,
+                teclaPulsada: null,
+                tecla: [],
+                colorBala: "cyan",
+                colorBalaEnemigo: "red",
+                balasArray: new Array(),
+                balasEnemigasArray:new Array(),
+                enemigosArray: new Array(),
+                disparo: false,
+            }
+
+            // Constantes del Juego
+            const KEY_ENTER = 13;
+            const KEY_LEFT = 37;
+            const KEY_UP = 38;
+            const KEY_RIGHT = 39;
+            const KEY_DOWN = 40;
+            const BARRA = 32;
+
+            // Objetos del Juego
+
+            function Bala(x, y, ancho) {
+                this.x = x;
+                this.y = y;
+                this.ancho = ancho;
+                
+                this.dibujar = function () { 
+                    // Dibujar la Bala
+                    game.ctx.save();
+                    game.ctx.fillStyle = game.colorBala;
+                    game.ctx.fillRect(this.x, this.y, this.ancho, this.ancho);
+                    this.y = this.y - 4;
+                    game.ctx.restore();
+                };
+
+                this.disparar = function () {
+                    game.ctx.save();
+                    game.ctx.fillStyle = game.colorBalaEnemigo;
+                    game.ctx.fillRect(this.x, this.y, this.ancho, this.ancho);
+                    this.y = this.y + 6;
+                    game.ctx.restore();
+                };
+            }
+
+            function Jugador(x) {
+                this.x = x;
+                this.y = 450;
+                this.dibujar = function (x) {
+                    this.x = x;
+
+                    let canvasX = this.x; // Coordenada X en el canvas
+                    let canvasY = this.y; // Coordenada Y en el canvas
+                    let canvasWidth = 30; // Ancho en el canvas
+                    let canvasHeight = 15; // Alto en el canvas
+                    // Dibujar la Nave
+                    game.ctx.drawImage(game.imagen, canvasX, canvasY, canvasWidth, canvasHeight);
+
+                };
+
+            }
+
+            function Enemigos(x, y) {
+                this.x = x;
+                this.y = y;
+                this.ancho = 35;
+                this.veces = 0; // Numeros de Enemigos
+                this.desplasamientoX = 5;
+                this.ciclos = 0;
+                this.numero = 14;
+                this.figura = true;
+                this.vive = true;
+                this.dibujar = function () { // Retrazo de Enemigos
+                    if (this.ciclos > 30) { // Saltos
+                        if (this.veces > this.numero) {
+                            this.desplasamientoX *= -1;
+                            this.veces = 0;
+                            this.numero = 28;
+                            this.y += 20;
+                            this.desplasamientoX = (this.desplasamientoX > 0) ? this.desplasamientoX ++ : this.desplasamientoX --;
+
+                        } else {
+                            this.x += this.desplasamientoX;
+                        }
+
+                        this.veces ++;
+                        this.ciclos = 0;
+                        this.figura = !this.figura;
+
+                    } else {
+
+                        this.ciclos ++;
+
+                    }
+
+                    if (this.figura) {
+
+                        let sx = 0; // Coordenada X en la imagen fuente (source)
+                        let sy = 0; // Coordenada Y en la imagen fuente (source)
+                        let sw = 40; // Ancho en la imagen fuente (sourceWidth)
+                        let sh = 30;
+                        // Alto en la imagen fuente (sourceHeight)
+
+                        // Variables para la posición y tamaño en el canvas
+
+                        let dx = this.x; // Coordenada X en el canvas (destinationX)
+                        let dy = this.y; // Coordenada Y en el canvas (destinationY)
+                        let dw = 35; // Ancho en el canvas (destinationWidth)
+                        let dh = 30; // Alto en el canvas (destinationHeight)
+
+                        game.ctx.drawImage(game.imgenEnemigo, sx, sy, sw, sh, dx, dy, dw, dh);
+
+                    } else {
+
+                        let sx = 50; // Coordenada X en la imagen fuente (source)
+                        let sy = 0; // Coordenada Y en la imagen fuente (source)
+                        let sw = 35; // Ancho en la imagen fuente (sourceWidth)
+                        let sh = 30;
+                        // Alto en la imagen fuente (sourceHeight)
+
+                        // Variables para la posición y tamaño en el canvas
+
+                        let dx = this.x; // Coordenada X en el canvas (destinationX)
+                        let dy = this.y; // Coordenada Y en el canvas (destinationY)
+                        let dw = 35; // Ancho en el canvas (destinationWidth)
+                        let dh = 30; // Alto en el canvas (destinationHeight)
+
+                        game.ctx.drawImage(game.imgenEnemigo, sx, sy, sw, sh, dx, dy, dw, dh);
+
+                    }
+
+                };
+            }
+
+            // Funcion del Juego
+
+            const caratula = () => {
+                let imagen = new Image();
+                imagen.src = "./img/caratula.webp";
+                imagen.onload = () => {
+                    game.ctx.drawImage(imagen, 0, 0, game.canvas.width, game.canvas.height);
+                }
+            }
+
+            const seleccionar = (e) => {
+                if (game.caratula) {
+                    inicio();
+                }
+            }
+
+            const inicio = () => {
+                game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
+                game.caratula = false;
+                game.jugador = new Jugador(0);
+                game.x = game.canvas.width / 2;
+                game.jugador.dibujar(game.x);
+                animar();
+            }
+
+
+            // let x = 100;
+            // let y = 100;
+
+            const animar = () => {
+                requestAnimationFrame(animar);
+                verificar();
+                pintar();
+                colisiones();
+            }
+
+            const colisiones = () => {
+
+                let enemigo;
+                let bala;
+
+                for (var i = 0; i < game.enemigosArray.length; i++) {
+                    for (var j = 0; j < game.balasArray.length; j++) {
+                        enemigo = game.enemigosArray[i];
+                        bala = game.balasArray[j];
+
+                        if (enemigo != null && bala != null) {
+                            if ((bala.x > enemigo.x) && (bala.x<enemigo.x+enemigo.ancho) && (bala.y>enemigo.y) && (bala.y<enemigo.y+enemigo.ancho)){
+                            enemigo.vive = false;
+                            game.enemigosArray[i] = null;
+                            game.balasArray[j] = null;
+                            game.disparo = false;
+
+                            }
+                        }
+                    }
+                }
+            }
+
+            const verificar = () => {
+
+                if (game.tecla[KEY_RIGHT]) {
+                    game.x += 10;
+                }
+                if (game.tecla[KEY_LEFT]) {
+                    game.x -= 10;
+                }
+
+                // Verificacion de Cañon (No salir del los Bordes)
+
+                if (game.x > game.canvas.width - 30) {
+                    game.x = game.canvas.width - 30;
+                }
+
+                if (game.x < 0) {
+                    game.x = 0;
+                }
+
+                // Realizar Disparo
+
+                if (game.tecla[BARRA]) {
+
+                    if(game.disparo == false){
+                        let ejeX = game.jugador.x + 12;
+                        let ejeY = game.jugador.y - 3;
+                        let anchoBala = 5;
+                        game.balasArray.push(new Bala(ejeX, ejeY, anchoBala));
+                        game.tecla[BARRA] = false;
+                        game.disparo = true;
+                    }
+                }
+
+            }
+
+            const pintar =() => { // Limpia el Lienzo
+
+                game.ctx.clearRect(0, 0, game.canvas.width, game.canvas.height);
+                game.jugador.dibujar(game.x);
+
+                // Mover las Balas
+
+                for (let i = 0; i < game.balasArray.length; i++) {
+
+                    if (game.balasArray[i] != null) {
+                        game.balasArray[i].dibujar();
+                        if (game.balasArray[i].y < 0) {
+                            game.balasArray[i] = null;
+                            game.disparo=false;
+                        }
+                    }
+                }
+
+                // Mostrar Enemigos
+
+                for (let i = 0; i < game.enemigosArray.length; i++) {
+                    if (game.enemigosArray[i] != null) {
+                        game.enemigosArray[i].dibujar();
+                    }
+                }
+            }
+
+
+            // Eventos Listener
+
+            document.addEventListener("keydown", function (e) {
+                game.teclaPulsada = e.keyCode;
+                game.tecla[e.keyCode] = true;
+            });
+
+            document.addEventListener("keyup", function (e) {
+                game.tecla[e.keyCode] = false;
+            });
+
+
+            // Actualiza cada 17 milisegundos
+
+            window.requestAnimationFrame =( function() {
+            return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function (callback) {
+                window.setTomiout(callback, 17);
+                }
+            })();
+
+            // Cargar eventos
+            window.onload = function () {
+
+            game.canvas = document.getElementById("canvas");
+
+            if (canvas && canvas.getContext) {
+
+                game.ctx = canvas.getContext('2d'); // Obtener el contexto 2D
+
+                if (game.ctx) {
+
+                    game.imagen = new Image();
+                    game.imagen.src = "./img/torre.fw.png";
+
+                    // Creacion de Enemigos
+
+                    game.imgenEnemigo = new Image();
+                    game.imgenEnemigo.src = "./img/invader.fw.png";
+                    game.imgenEnemigo.onload = function () {
+                        for (let i = 0; i < 5; i++) {
+                            for (let j = 0; j < 10; j++) {
+                                let ejeX = 100 + 45 * j;
+                                let ejeY = 30 + 45 * i;
+                                game.enemigosArray.push(new Enemigos(ejeX, ejeY));
+                            }
+                        }
+                    }
+
+
+                    caratula();
+                    game.canvas.addEventListener("click", seleccionar, false);
+
+
+                } else {
+                    alert("Tu navegador NO soporta Este Juego");
+                }
+            }
+        }
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Juego de Naves Espaciales</h1>
+            <canvas id="canvas" width="960" height="500">
+                Tu Navegador No Soporta la Etiqueta Canvas
+            </canvas>
+        </div>
+    </body>
+</html>
