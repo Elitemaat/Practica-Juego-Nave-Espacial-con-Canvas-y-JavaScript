@@ -37,7 +37,7 @@
                 colorBala: "cyan",
                 colorBalaEnemigo: "red",
                 balasArray: new Array(),
-                balasEnemigasArray:new Array(),
+                balasEnemigasArray: new Array(),
                 enemigosArray: new Array(),
                 disparo: false,
             }
@@ -102,15 +102,16 @@
                 this.numero = 14;
                 this.figura = true;
                 this.vive = true;
-                this.dibujar = function () { // Retrazo de Enemigos
-                    if (this.ciclos > 30) { // Saltos
+                this.dibujar = function () { 
+                    // Retrazo de Enemigos
+                    if (this.ciclos > 30) { 
+                        // Saltos
                         if (this.veces > this.numero) {
                             this.desplasamientoX *= -1;
                             this.veces = 0;
                             this.numero = 28;
                             this.y += 20;
                             this.desplasamientoX = (this.desplasamientoX > 0) ? this.desplasamientoX ++ : this.desplasamientoX --;
-
                         } else {
                             this.x += this.desplasamientoX;
                         }
@@ -212,11 +213,10 @@
 
                         if (enemigo != null && bala != null) {
                             if ((bala.x > enemigo.x) && (bala.x<enemigo.x+enemigo.ancho) && (bala.y>enemigo.y) && (bala.y<enemigo.y+enemigo.ancho)){
-                            enemigo.vive = false;
-                            game.enemigosArray[i] = null;
-                            game.balasArray[j] = null;
-                            game.disparo = false;
-
+                                enemigo.vive = false;
+                                game.enemigosArray[i] = null;
+                                game.balasArray[j] = null;
+                                game.disparo = false;
                             }
                         }
                     }
@@ -256,6 +256,32 @@
                     }
                 }
 
+                //Disparar Enemigo
+                if( Math.random() > 0.96){
+
+                    dispararEnemigo();
+
+                }
+
+            }
+
+            const dispararEnemigo = () => {
+                
+                let ultimos = new Array();
+                for(let i = game.enemigosArray.length - 1; i > 0; i-- ){
+                    if(game.enemigosArray[i]!=null){
+                        ultimos.push(i);
+                    }
+                    if(ultimos.length == 10){
+                        break;
+                    }
+                }
+
+                let d = ultimos[Math.floor(Math.random()*10)];
+                let ejeX = game.enemigosArray[d].x + game.enemigosArray[d].ancho/2;
+                let ejeY = game.enemigosArray[d].y;
+                let ancho = 5;
+                game.balasEnemigasArray.push(new Bala(ejeX, ejeY, ancho));
             }
 
             const pintar =() => { // Limpia el Lienzo
@@ -264,7 +290,6 @@
                 game.jugador.dibujar(game.x);
 
                 // Mover las Balas
-
                 for (let i = 0; i < game.balasArray.length; i++) {
 
                     if (game.balasArray[i] != null) {
@@ -276,8 +301,18 @@
                     }
                 }
 
-                // Mostrar Enemigos
+                //Mover las Balas Enemigas
 
+                for(let i=0; i < game.balasEnemigasArray.length; i++){
+                    if(game.balasEnemigasArray[i] != null){
+                        game.balasEnemigasArray[i].disparar();
+                        if(game.balasEnemigasArray[i].y > game.canvas.height){
+                            game.balasEnemigasArray[i]= null;
+                        }
+                    }
+                }
+
+                // Mostrar Enemigos
                 for (let i = 0; i < game.enemigosArray.length; i++) {
                     if (game.enemigosArray[i] != null) {
                         game.enemigosArray[i].dibujar();
