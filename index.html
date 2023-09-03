@@ -42,6 +42,10 @@
                 disparo: false,
                 puntos: 0,
                 finJuego: false,
+                boing: null,
+                disparoJugador: null,
+                intro: null,
+                fin: null,
             }
 
             // Constantes del Juego
@@ -200,7 +204,7 @@
 
             const animar = () => {
 
-                if(game.finJuego ==false){
+                if(game.finJuego == false){
                     
                     requestAnimationFrame(animar);
                     verificar();
@@ -226,6 +230,7 @@
                                 game.balasArray[j] = null;
                                 game.disparo = false;
                                 game.puntos += 10;
+                                game.boing.play();
                             }
                         }
                     }
@@ -257,13 +262,13 @@
                 game.enemigosArray = [];
                 game.balasEnemigasArray = [];
                 game.finJuego = true;
+                game.fin.play();
                 mensaje("GAME OVER", 100 , 60);
                 mensaje("Losgraste "+game.puntos+" puntos",220);
 
-                if(game.puntos < 100 || game.puntos <= 200){
-                    mensaje("Casi lo Logras",340);
-                    
-                }else if(game.puntos < 200 ){
+                if(game.puntos > 100 || game.puntos <= 200){
+                    mensaje("Casi lo Logras",340);         
+                }else if(game.puntos > 200 ){
                     mensaje("Felicitaciones Puntaje Alto",340);
                 }else{
                     mensaje("Lastima Puntaje Bajo",340);
@@ -271,15 +276,25 @@
 
             }
 
-            const mensaje = (cadena, y, tamanyo = 90) =>{
-                let medio = game.canvas.width/2;
+            const mensaje = (cadena, y, tamanyo = 40) => {
+                // Calcula el punto medio del canvas horizontalmente
+                let medio = game.canvas.width / 2;
+
+                // Guarda el estado actual del contexto del canvas
                 game.ctx.save();
+                // Establece el color de relleno del texto en verde
                 game.ctx.fillStyle = "green";
+                // Establece el color del borde del texto en azul
                 game.ctx.strokeStyle = "blue";
+                // Establece la alineación vertical del texto en la parte superior del punto de referencia (top)
                 game.ctx.textBaseline = "top";
-                game.ctx.fount = "bold" + tamanyo + "px Courier";
+                // Establece la fuente del texto con un tamaño dado (tamanyo)
+                game.ctx.font = "bold " + tamanyo + "px Courier";
+                // Establece la alineación horizontal del texto en el centro
                 game.ctx.textAlign = "center";
-                game.ctx.fillText(cadena,medio,y);
+                // Dibuja el texto (cadena) en el canvas en la posición horizontal del medio y la posición vertical (y)
+                game.ctx.fillText(cadena, medio, y);
+                // Restaura el estado previamente guardado del contexto del canvas
                 game.ctx.restore();
             }
 
@@ -313,6 +328,7 @@
                         game.balasArray.push(new Bala(ejeX, ejeY, anchoBala));
                         game.tecla[BARRA] = false;
                         game.disparo = true;
+                        game.disparoJugador.play();
                     }
                 }
 
@@ -388,7 +404,7 @@
 
                 game.ctx.save();
                 game.ctx.fillStyle = "white";
-                game.ctx.fount = "bold 20px Courier";
+                game.ctx.font = "bold 20px Courier";
                 game.ctx.fillText("Puntaje: "+game.puntos, 10 , 20);
                 game.ctx.restore();
 
@@ -426,6 +442,13 @@
 
                 if (game.ctx) {
 
+                    // Cargar Sonidos
+                    game.boing = document.getElementById("boing");
+                    game.disparoJugador = document.getElementById("disparo");
+                    game.intro = document.getElementById("intro");
+                    game.fin = document.getElementById("fin");
+
+
                     game.imagen = new Image();
                     game.imagen.src = "./img/torre.fw.png";
 
@@ -461,6 +484,22 @@
             <canvas id="canvas" width="960" height="500">
                 Tu Navegador No Soporta la Etiqueta Canvas
             </canvas>
+            <audio id="boing">
+                <source src="./audio/boing.mp3" type="">
+                <source src="./audio/boing.ogg" type="">
+            </audio>
+            <audio id="disparo">
+                <source src="./audio/disparo.mp3" type="">
+                <source src="./audio/disparo.ogg" type="">
+            </audio>
+            <audio id="intro">
+                <source src="./audio/intro.mp3" type="">
+                <source src="./audio/intro.mp3" type="">
+            </audio>
+            <audio id="fin">
+                <source src="./audio/gameOver.mp3" type="">
+                <source src="./audio/gameOver.ogg" type="">
+            </audio>
         </div>
     </body>
 </html>
